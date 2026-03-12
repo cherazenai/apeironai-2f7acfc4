@@ -59,7 +59,7 @@ const Hero = () => {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           <a
-            href="#demo"
+            href="/dashboard"
             className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-medium px-8 py-3.5 rounded-lg glow-button transition-all duration-300 text-sm"
           >
             <Sparkles size={16} />
