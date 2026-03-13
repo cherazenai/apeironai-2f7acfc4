@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,13 +36,21 @@ const Signup = () => {
   };
 
   const handleGoogleSignup = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      toast({ title: "Google signup failed", description: String(error), variant: "destructive" });
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: "https://ai.cherazen.com/dashboard"
     }
-  };
+  });
+
+  if (error) {
+    toast({
+      title: "Google signup failed",
+      description: error.message,
+      variant: "destructive"
+    });
+  }
+};
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
