@@ -18,7 +18,7 @@ const suggestions = [
   "Identify carbon capture materials with high absorption",
 ];
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+const CHAT_URL = "https://xroevyeykhvifwdymqjo.supabase.co/functions/v1/clever-responder";
 
 const ResearchCopilot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
