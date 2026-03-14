@@ -41,22 +41,28 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border/50">
       <SidebarContent className="bg-sidebar">
         <div className="p-4 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
           <img src={logoIcon} alt="ApeironAI" className="w-8 h-8" />
-          {!collapsed && <span className="font-heading text-lg text-foreground">ApeironAI</span>}
+          {!collapsed && <span className="font-heading text-lg text-foreground tracking-tight">ApeironAI</span>}
         </div>
 
-        {/* User info */}
         {!collapsed && user && (
           <div className="px-4 pb-3">
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         )}
+        {!collapsed && !user && (
+          <div className="px-4 pb-3">
+            <p className="text-xs text-primary/80">Guest Mode</p>
+          </div>
+        )}
+
+        <div className="mx-3 border-t border-sidebar-border/30 mb-2" />
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider">
+          <SidebarGroupLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-[0.2em] font-body">
             {!collapsed && "Research Tools"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -64,8 +70,13 @@ export function AppSidebar() {
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-primary font-medium">
-                      <item.icon className="h-4 w-4" />
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent/50 transition-all duration-200 group"
+                      activeClassName="bg-sidebar-accent text-primary font-medium shadow-[inset_2px_0_0_hsl(var(--primary))]"
+                    >
+                      <item.icon className="h-4 w-4 group-hover:text-primary transition-colors" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -75,8 +86,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <div className="mx-3 border-t border-sidebar-border/30 my-2" />
+
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground text-xs uppercase tracking-wider">
+          <SidebarGroupLabel className="text-muted-foreground/60 text-[10px] uppercase tracking-[0.2em] font-body">
             {!collapsed && "Account"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -84,8 +97,13 @@ export function AppSidebar() {
               {accountItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-primary font-medium">
-                      <item.icon className="h-4 w-4" />
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="hover:bg-sidebar-accent/50 transition-all duration-200 group"
+                      activeClassName="bg-sidebar-accent text-primary font-medium shadow-[inset_2px_0_0_hsl(var(--primary))]"
+                    >
+                      <item.icon className="h-4 w-4 group-hover:text-primary transition-colors" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -96,13 +114,20 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-sidebar border-t border-sidebar-border p-3">
+      <SidebarFooter className="bg-sidebar border-t border-sidebar-border/30 p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Logout</span>}
-            </SidebarMenuButton>
+            {user ? (
+              <SidebarMenuButton onClick={handleLogout} className="text-muted-foreground hover:text-destructive transition-colors">
+                <LogOut className="h-4 w-4" />
+                {!collapsed && <span>Logout</span>}
+              </SidebarMenuButton>
+            ) : (
+              <SidebarMenuButton onClick={() => navigate("/login")} className="text-primary hover:text-primary/80 transition-colors">
+                <User className="h-4 w-4" />
+                {!collapsed && <span>Sign In</span>}
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

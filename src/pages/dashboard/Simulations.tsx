@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useGuestMode } from "@/hooks/useGuestMode";
 import { useToast } from "@/hooks/use-toast";
 
 const Simulations = () => {
@@ -16,10 +17,13 @@ const Simulations = () => {
   const [result, setResult] = useState("");
   const [resultSaved, setResultSaved] = useState(false);
   const { user } = useAuth();
+  const { trackAction } = useGuestMode();
   const { toast } = useToast();
 
   const runSimulation = async () => {
     if (!material || !reaction) return;
+    if (!trackAction()) return;
+
     setIsRunning(true);
     setResult("");
     setResultSaved(false);
@@ -44,14 +48,17 @@ const Simulations = () => {
   };
 
   const saveResult = async () => {
-    if (!user || !result) return;
-    const { error } = await supabase.from("experiments" as any).insert({
+    if (!user) {
+      toast({ title: "Sign in required", description: "Create an account to save results.", variant: "destructive" });
+      return;
+    }
+    const { error } = await supabase.from("experiments").insert({
       user_id: user.id,
       title: `${material} - ${reaction} simulation`,
       hypothesis: `Simulating ${reaction} with ${material}`,
       method: "AI Simulation",
       results: result,
-    } as any);
+    });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
@@ -63,18 +70,18 @@ const Simulations = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-heading text-foreground">Simulations</h1>
+        <h1 className="text-2xl font-heading text-foreground tracking-wide">Simulations</h1>
         <p className="text-muted-foreground text-sm">AI-predicted experimental outcomes</p>
       </div>
 
-      <Card className="glass">
-        <CardHeader><CardTitle className="text-lg font-heading">Configure Simulation</CardTitle></CardHeader>
+      <Card className="glass hover:border-primary/20 transition-all duration-500">
+        <CardHeader><CardTitle className="text-lg font-heading tracking-wide">Configure Simulation</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">Material</label>
               <Select onValueChange={setMaterial}>
-                <SelectTrigger className="bg-card-elevated border-border"><SelectValue placeholder="Select material" /></SelectTrigger>
+                <SelectTrigger className="bg-card-elevated border-border/50"><SelectValue placeholder="Select material" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="graphene">Graphene</SelectItem>
                   <SelectItem value="lithium-sulfur">Lithium-Sulfur</SelectItem>
@@ -87,7 +94,7 @@ const Simulations = () => {
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">Reaction Type</label>
               <Select onValueChange={setReaction}>
-                <SelectTrigger className="bg-card-elevated border-border"><SelectValue placeholder="Select reaction" /></SelectTrigger>
+                <SelectTrigger className="bg-card-elevated border-border/50"><SelectValue placeholder="Select reaction" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="oxidation">Oxidation</SelectItem>
                   <SelectItem value="reduction">Reduction</SelectItem>
@@ -110,7 +117,7 @@ const Simulations = () => {
           <Card className="glass glow-border">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-heading flex items-center gap-2">
+                <CardTitle className="text-lg font-heading flex items-center gap-2 tracking-wide">
                   <FlaskConical className="h-5 w-5 text-primary" /> Results
                 </CardTitle>
                 <Button size="sm" variant="outline" onClick={saveResult} disabled={resultSaved} className="gap-1.5">
