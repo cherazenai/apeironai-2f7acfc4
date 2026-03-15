@@ -17,6 +17,7 @@ const mainItems = [
   { title: "Research Copilot", url: "/dashboard/copilot", icon: MessageSquare },
   { title: "Hypothesis Generator", url: "/dashboard/hypotheses", icon: Lightbulb },
   { title: "Paper Library", url: "/dashboard/papers", icon: BookOpen },
+  { title: "AI Paper Reader", url: "/dashboard/paper-reader", icon: FileSearch },
   { title: "Simulations", url: "/dashboard/simulations", icon: FlaskConical },
   { title: "Experiments", url: "/dashboard/experiments", icon: TestTubes },
   { title: "Saved Projects", url: "/dashboard/projects", icon: FolderKanban },
