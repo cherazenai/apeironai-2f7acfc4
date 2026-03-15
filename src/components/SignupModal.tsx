@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGuestMode } from "@/hooks/useGuestMode";
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { useToast } from "@/hooks/use-toast";
 
 const SignupModal = () => {
