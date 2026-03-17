@@ -28,6 +28,7 @@ import ResponsibleAI from "./pages/legal/ResponsibleAI";
 import ResearchEthics from "./pages/legal/ResearchEthics";
 import DataUsagePolicy from "./pages/legal/DataUsagePolicy";
 import CookiePolicy from "./pages/legal/CookiePolicy";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 

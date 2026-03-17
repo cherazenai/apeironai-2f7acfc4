@@ -5,10 +5,10 @@ import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo-icon.png";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
-  { label: "Demo", href: "#demo" },
-  { label: "Research", href: "#research" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Features", href: "/#features" },
+  { label: "Research", href: "/#research" },
+  { label: "Pricing", href: "/pricing", isRoute: true },
+  { label: "Blog", href: "/#blog" },
 ];
 
 const Navbar = () => {

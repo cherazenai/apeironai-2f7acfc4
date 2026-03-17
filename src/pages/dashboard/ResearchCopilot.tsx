@@ -1,147 +1,131 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Bot, Sparkles, Brain, FlaskConical, BookOpen, Loader2, CheckCircle2, Mail, User } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useGuestMode } from "@/hooks/useGuestMode";
 import { useToast } from "@/hooks/use-toast";
 
-type Message = { role: "user" | "assistant"; content: string };
-
-const suggestions = [
-  "Find catalysts for hydrogen production",
-  "Suggest new battery chemistry to improve energy density",
-  "What are the latest breakthroughs in CRISPR therapy?",
-  "Identify carbon capture materials with high absorption",
+const features = [
+  { icon: BookOpen, title: "Read Scientific Literature", desc: "Analyze and extract insights from research papers" },
+  { icon: Brain, title: "Generate Hypotheses", desc: "AI-driven scientific hypothesis generation" },
+  { icon: FlaskConical, title: "Design Experiments", desc: "Step-by-step experimental design assistance" },
+  { icon: Sparkles, title: "Discover Insights", desc: "Cross-paper knowledge synthesis and discovery" },
 ];
 
 const ResearchCopilot = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
-  const { trackAction } = useGuestMode();
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [joined, setJoined] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
-
-    // Track guest action
-    if (!trackAction()) return;
-
-    const userMsg: Message = { role: "user", content: text.trim() };
-    const allMessages = [...messages, userMsg];
-    setMessages(allMessages);
-    setInput("");
-    setIsLoading(true);
-
-    let assistantContent = "";
-
-    try {
-      const { data, error } = await supabase.functions.invoke("chat", {
-        body: { messages: allMessages, stream: true },
-      });
-
-      if (error) throw error;
-
-      // Handle non-streaming response
-      if (data) {
-        const content = typeof data === "string" ? data : data?.choices?.[0]?.message?.content || "I'm here to help with your research.";
-        assistantContent = content;
-        setMessages(prev => [...prev, { role: "assistant", content }]);
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setLoading(true);
+    const { error } = await supabase.from("waitlist").insert({ email: email.trim(), name: name.trim() || null });
+    setLoading(false);
+    if (error) {
+      if (error.code === "23505") {
+        toast({ title: "Already on the waitlist!", description: "This email is already registered." });
+        setJoined(true);
+      } else {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
       }
-
-      // Save to database for authenticated users
-      if (user && assistantContent) {
-        await supabase.from("research_queries").insert({
-          user_id: user.id,
-          query: text.trim(),
-          response: assistantContent,
-        });
-      }
-    } catch (err) {
-      console.error("Chat error:", err);
-      setMessages(prev => [
-        ...prev,
-        { role: "assistant", content: "I encountered an error. Please try again." },
-      ]);
-    } finally {
-      setIsLoading(false);
+    } else {
+      setJoined(true);
+      toast({ title: "You're on the list! 🎉", description: "We'll notify you when Research Copilot launches." });
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] max-w-4xl mx-auto">
-      <div className="mb-4">
-        <h1 className="text-2xl font-heading text-foreground tracking-wide">Research Copilot</h1>
-        <p className="text-muted-foreground text-sm">AI-powered scientific research assistant</p>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] max-w-3xl mx-auto px-4">
+      {/* Ambient glow */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px]" />
       </div>
 
-      <Card className="glass flex-1 flex flex-col overflow-hidden hover:border-primary/20 transition-all duration-500">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Bot className="h-8 w-8 text-primary opacity-70" />
-              </div>
-              <div>
-                <p className="text-foreground font-heading text-lg tracking-wide">How can I help your research?</p>
-                <p className="text-muted-foreground text-sm mt-1">Ask about scientific topics, hypotheses, or experiments</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
-                {suggestions.map((s) => (
-                  <button key={s} onClick={() => sendMessage(s)} className="text-left text-sm p-3 rounded-xl border border-border/50 hover:border-primary/30 hover:bg-card-elevated hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.1)] transition-all duration-300 text-muted-foreground hover:text-foreground">
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        className="relative z-10 text-center w-full"
+      >
+        {/* Icon */}
+        <motion.div
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 border border-primary/20 flex items-center justify-center glow-border"
+        >
+          <Bot className="h-10 w-10 text-primary" />
+        </motion.div>
 
-          {messages.map((msg, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
-              {msg.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0 mt-1">
-                  <Bot className="h-4 w-4 text-primary" />
+        <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-2">Research Copilot</h1>
+        <p className="text-primary text-sm font-medium tracking-wide uppercase mb-6">Coming Soon</p>
+        <p className="text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
+          Research Copilot is currently under development. We are building an advanced AI system that can read scientific literature, generate hypotheses, and assist researchers in discovering new insights.
+        </p>
+
+        {/* Feature cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+          {features.map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + i * 0.1 }}
+            >
+              <Card className="glass p-5 text-left hover:border-primary/30 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.15)] transition-all duration-500">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <f.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading text-sm font-semibold text-foreground mb-1">{f.title}</h3>
+                    <p className="text-xs text-muted-foreground">{f.desc}</p>
+                  </div>
                 </div>
-              )}
-              <div className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-card-elevated text-foreground"}`}>
-                {msg.role === "assistant" ? (
-                  <div className="prose prose-invert prose-sm max-w-none"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
-                ) : msg.content}
-              </div>
-              {msg.role === "user" && (
-                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-1">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                </div>
-              )}
+              </Card>
             </motion.div>
           ))}
+        </div>
 
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center shrink-0"><Bot className="h-4 w-4 text-primary" /></div>
-              <div className="bg-card-elevated rounded-xl px-4 py-3"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
-            </div>
+        {/* Waitlist form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          {joined ? (
+            <Card className="glass glow-border p-8 max-w-md mx-auto flex flex-col items-center gap-3">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
+              <p className="font-heading text-lg text-foreground">You're on the list!</p>
+              <p className="text-sm text-muted-foreground">We'll notify you when Research Copilot launches.</p>
+            </Card>
+          ) : (
+            <Card className="glass p-6 max-w-md mx-auto">
+              <p className="text-sm text-foreground font-heading mb-4">Join the Waitlist</p>
+              <form onSubmit={handleJoin} className="space-y-3">
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 bg-secondary border-border" />
+                </div>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-secondary border-border" required />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full glow-button h-11">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join the Waitlist"}
+                </Button>
+              </form>
+            </Card>
           )}
-        </div>
-
-        <div className="p-4 border-t border-border/50">
-          <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2">
-            <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a scientific question..." className="flex-1 bg-card-elevated border-border/50" disabled={isLoading} />
-            <Button type="submit" disabled={isLoading || !input.trim()} className="glow-button"><Send className="h-4 w-4" /></Button>
-          </form>
-        </div>
-      </Card>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
