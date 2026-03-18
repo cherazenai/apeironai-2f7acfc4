@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles, ArrowRight, Loader2 } from "lucide-react";
@@ -119,8 +120,18 @@ const Pricing = () => {
       const loaded = await loadRazorpayScript();
       if (!loaded) throw new Error("Failed to load Razorpay");
 
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      if (!token) {
+        toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" });
+        setLoadingPlan(null);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("razorpay", {
         body: { action: "create_order", plan: planKey },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (error || !data?.order_id) throw new Error(error?.message || "Order creation failed");
@@ -142,6 +153,7 @@ const Pricing = () => {
                 order_id: response.razorpay_order_id,
                 signature: response.razorpay_signature,
               },
+              headers: { Authorization: `Bearer ${token}` },
             });
 
             if (verifyError || !verifyData?.success) {
