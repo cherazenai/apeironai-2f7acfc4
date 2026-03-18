@@ -36,7 +36,7 @@ const plans = [
   },
   {
     name: "Researcher",
-    price: "₹2,900",
+    price: "$29",
     period: "/month",
     planKey: "researcher",
     description: "For active researchers pushing boundaries",
@@ -54,7 +54,7 @@ const plans = [
   },
   {
     name: "Scientist",
-    price: "₹7,900",
+    price: "$79",
     period: "/month",
     planKey: "scientist",
     description: "Advanced tools for serious scientific work",
@@ -104,7 +104,7 @@ const loadRazorpayScript = (): Promise<boolean> => {
 };
 
 const Pricing = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
@@ -120,8 +120,7 @@ const Pricing = () => {
       const loaded = await loadRazorpayScript();
       if (!loaded) throw new Error("Failed to load Razorpay");
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      const token = session?.access_token;
 
       if (!token) {
         toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" });
@@ -134,7 +133,7 @@ const Pricing = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (error || !data?.order_id) throw new Error(error?.message || "Order creation failed");
+      if (error || !data?.order_id) throw new Error(JSON.stringify(error) || "Order creation failed");
 
       const options = {
         key: data.key_id,
