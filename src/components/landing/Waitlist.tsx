@@ -1,38 +1,28 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, CheckCircle2, Mail, User, Building2, Beaker } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const Waitlist = () => {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [joined, setJoined] = useState(false);
-  const { toast } = useToast();
-
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
-
-    const { error } = await supabase.from("waitlist" as any).insert({ email: email.trim(), name: name.trim() } as any);
-    setLoading(false);
-
-    if (error) {
-      if (error.code === "23505") {
-        toast({ title: "Already on the waitlist!", description: "This email is already registered." });
-        setJoined(true);
+  useEffect(() => {
+    const w = "https://tally.so/widgets/embed.js";
+    const v = () => {
+      if (typeof (window as any).Tally !== "undefined") {
+        (window as any).Tally.loadEmbeds();
       } else {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        document.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((e: any) => {
+          e.src = e.dataset.tallySrc;
+        });
       }
-    } else {
-      setJoined(true);
-      toast({ title: "You're on the list! 🎉", description: "We'll notify you when access opens." });
+    };
+    if (typeof (window as any).Tally !== "undefined") {
+      v();
+    } else if (!document.querySelector(`script[src="${w}"]`)) {
+      const s = document.createElement("script");
+      s.src = w;
+      s.onload = v;
+      s.onerror = v;
+      document.body.appendChild(s);
     }
-  };
+  }, []);
 
   return (
     <section id="waitlist" className="section-padding">
@@ -42,29 +32,16 @@ const Waitlist = () => {
           <h2 className="font-heading text-3xl md:text-5xl font-bold tracking-tight mb-3">Join the Waitlist</h2>
           <p className="text-muted-foreground mb-8 font-body text-sm">Be the first to access ApeironAI when we launch publicly.</p>
 
-          {joined ? (
-            <div className="glass glow-border rounded-2xl p-8 flex flex-col items-center gap-3">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-              <p className="font-heading text-lg">You're on the list!</p>
-              <p className="text-sm text-muted-foreground">We'll reach out when your access is ready.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleJoin} className="glass rounded-2xl p-6 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="pl-10 bg-card-elevated border-border" />
-                </div>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" placeholder="your@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 bg-card-elevated border-border" required />
-                </div>
-              </div>
-              <Button type="submit" disabled={loading} className="w-full glow-button h-11">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Join the Waitlist"}
-              </Button>
-            </form>
-          )}
+          <iframe
+            data-tally-src="https://tally.so/embed/1AE2MM?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+            loading="lazy"
+            width="100%"
+            height="1059"
+            frameBorder="0"
+            marginHeight={0}
+            marginWidth={0}
+            title="ApeironAI Waitlist"
+          />
         </motion.div>
       </div>
     </section>
