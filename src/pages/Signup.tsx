@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,14 +36,17 @@ const Signup = () => {
   };
 
   const handleGoogleSignup = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: "https://ai.cherazen.com/auth/callback",
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
 
-    if (result?.error) {
+    if (error) {
       toast({
         title: "Google signup failed",
-        description: result.error.message,
+        description: error.message,
         variant: "destructive",
       });
     }
