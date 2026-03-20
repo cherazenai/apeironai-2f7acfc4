@@ -1,71 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Bot, Sparkles, Brain, FlaskConical, BookOpen, Loader2, Send, User, Lightbulb, FileText } from "lucide-react";
+import { Bot, Brain, BookOpen, Loader2, Send, User, Lightbulb, FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-const MODEL = "llama-3.3-70b-versatile";
-
-const SYSTEM_PROMPT = `You are ApeironAI — a Research Copilot designed to assist scientists and researchers.
-
-Your goal is NOT to give generic explanations, but to produce structured, insightful, and research-grade outputs.
-
-Always follow this format:
-
-1. Summary (concise, technical overview)
-
-2. Key Methods & Approaches
-- Focus only on the most relevant and impactful methods
-- Avoid generic explanations
-
-3. Novel Insight / Research Direction
-- Suggest a specific, non-obvious research direction
-- Combine ideas if possible
-
-4. Testable Hypothesis
-- Provide at least one clear, testable scientific hypothesis
-- Make it measurable if possible
-
-5. Confidence Score
-- Give a confidence score (0–1) based on current scientific understanding
-
-6. Novelty Assessment
-- Low / Medium / High + short explanation
-
-7. Suggested Next Experiments
-- Practical steps a researcher could take
-
-Rules:
-- Avoid generic textbook explanations
-- Be specific and technical
-- Think like an expert collaborator, not a chatbot`;
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Tab = "chat" | "hypothesis" | "paper";
 
 async function askGroq(messages: Message[], extraSystem = ""): Promise<string> {
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT + (extraSystem ? "\n\n" + extraSystem : "") },
-        ...messages
-      ],
-      temperature: 0.7,
-      max_tokens: 1024,
-      top_p: 1,
-    }),
+  const { data, error } = await supabase.functions.invoke("groq-chat", {
+    body: { messages, extraSystem },
   });
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || "No response received.";
+  if (error) throw new Error(error.message);
+  return data?.choices?.[0]?.message?.content || "No response received.";
 }
 
 // ── CHAT TAB ──────────────────────────────────────────────
@@ -86,8 +36,12 @@ function ChatTab() {
     setMessages(newMessages);
     setInput("");
     setLoading(true);
-    const reply = await askGroq(newMessages);
-    setMessages([...newMessages, { role: "assistant", content: reply }]);
+    try {
+      const reply = await askGroq(newMessages);
+      setMessages([...newMessages, { role: "assistant", content: reply }]);
+    } catch (e) {
+      setMessages([...newMessages, { role: "assistant", content: "Error — please try again." }]);
+    }
     setLoading(false);
   };
 
@@ -160,11 +114,15 @@ function HypothesisTab() {
     if (!topic.trim() || loading) return;
     setLoading(true);
     setResult("");
-    const reply = await askGroq(
-      [{ role: "user", content: `Generate 3 novel, testable scientific hypotheses for this research topic: "${topic}"` }],
-      "Focus specifically on hypothesis generation. For each hypothesis provide: statement, reasoning, testing method, confidence score, novelty rating, and next experiments."
-    );
-    setResult(reply);
+    try {
+      const reply = await askGroq(
+        [{ role: "user", content: `Generate 3 novel, testable scientific hypotheses for this research topic: "${topic}"` }],
+        "Focus specifically on hypothesis generation. For each hypothesis provide: statement, reasoning, testing method, confidence score, novelty rating, and next experiments."
+      );
+      setResult(reply);
+    } catch (e) {
+      setResult("Error — please try again.");
+    }
     setLoading(false);
   };
 
@@ -214,11 +172,15 @@ function PaperTab() {
     if (!text.trim() || loading) return;
     setLoading(true);
     setResult("");
-    const reply = await askGroq(
-      [{ role: "user", content: `Analyze this scientific paper/text:\n\n${text}` }],
-      "Focus specifically on paper analysis. Extract key findings, evaluate methodology, identify limitations, suggest research directions, and provide confidence and novelty scores."
-    );
-    setResult(reply);
+    try {
+      const reply = await askGroq(
+        [{ role: "user", content: `Analyze this scientific paper/text:\n\n${text}` }],
+        "Focus specifically on paper analysis. Extract key findings, evaluate methodology, identify limitations, suggest research directions, and provide confidence and novelty scores."
+      );
+      setResult(reply);
+    } catch (e) {
+      setResult("Error — please try again.");
+    }
     setLoading(false);
   };
 
