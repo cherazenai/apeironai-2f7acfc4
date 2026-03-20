@@ -17,11 +17,19 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark") {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
     localStorage.setItem("theme", next ? "dark" : "light");
-    window.dispatchEvent(new Event("themechange"));
+    document.documentElement.classList.toggle("dark", next);
   };
 
   const handleNavClick = (link: typeof navLinks[0]) => {
