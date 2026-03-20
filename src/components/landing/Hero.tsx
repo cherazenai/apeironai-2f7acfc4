@@ -80,12 +80,14 @@ function ParticleCanvas({ isDark }: { isDark: boolean }) {
 }
 
 const Hero = () => {
-  const [isDark, setIsDark] = useState(() => localStorage.getItem("theme") === "dark");
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
-    const handler = () => setIsDark(localStorage.getItem("theme") === "dark");
-    window.addEventListener("themechange", handler);
-    return () => window.removeEventListener("themechange", handler);
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributeFilter: ["class"] });
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -104,7 +106,7 @@ const Hero = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.5 }}
-          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 ${isDark ? "border border-primary/20 bg-primary/5 backdrop-blur-sm" : "bg-blue-100"}`}
+          className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 ${isDark ? "border border-primary/20 bg-primary/5 backdrop-blur-sm" : "bg-blue-100 shadow-sm"}`}
         >
           <Sparkles size={14} className={isDark ? "text-primary" : "text-purple-600"} />
           <span className={`text-xs font-body tracking-wide ${isDark ? "text-primary" : "text-purple-700"}`}>
