@@ -6,6 +6,54 @@
 
 @layer base {
   :root {
+    --background: 238 100% 97%;
+    --foreground: 243 75% 20%;
+
+    --card: 240 50% 95%;
+    --card-foreground: 243 75% 20%;
+    --card-elevated: 240 40% 92%;
+
+    --popover: 240 50% 95%;
+    --popover-foreground: 243 75% 20%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 262 83% 75%;
+    --primary-muted: 262 50% 70%;
+
+    --secondary: 240 40% 92%;
+    --secondary-foreground: 243 75% 20%;
+
+    --muted: 240 30% 90%;
+    --muted-foreground: 240 15% 45%;
+
+    --accent: 262 83% 75%;
+    --accent-foreground: 243 75% 20%;
+    --accent-soft: 262 83% 95%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 20% 85%;
+    --input: 240 20% 85%;
+    --ring: 262 83% 58%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 238 100% 97%;
+    --sidebar-foreground: 243 75% 20%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 30% 90%;
+    --sidebar-accent-foreground: 243 75% 20%;
+    --sidebar-border: 240 20% 85%;
+    --sidebar-ring: 262 83% 58%;
+
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  .dark {
     --background: 216 60% 4%;
     --foreground: 210 40% 98%;
 
@@ -38,8 +86,6 @@
     --input: 216 30% 14%;
     --ring: 199 89% 48%;
 
-    --radius: 0.75rem;
-
     --sidebar-background: 216 55% 3%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 199 89% 48%;
@@ -48,9 +94,6 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 216 30% 14%;
     --sidebar-ring: 199 89% 48%;
-
-    --font-heading: 'Space Grotesk', sans-serif;
-    --font-body: 'Inter', sans-serif;
   }
 }
 
@@ -62,6 +105,7 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-family: var(--font-body);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -70,12 +114,8 @@
 }
 
 @layer utilities {
-  .font-heading {
-    font-family: var(--font-heading);
-  }
-  .font-body {
-    font-family: var(--font-body);
-  }
+  .font-heading { font-family: var(--font-heading); }
+  .font-body { font-family: var(--font-body); }
   .glass {
     @apply bg-card/60 backdrop-blur-xl border border-border/50;
   }
@@ -110,3 +150,26 @@
                 radial-gradient(ellipse 50% 30% at 20% 80%, hsl(var(--primary-glow) / 0.06), transparent);
   }
 }
+```
+
+Then **update the toggle in `Navbar.tsx`** — find the `toggleTheme` function and replace it with this:
+
+```tsx
+const toggleTheme = () => {
+  const next = !isDark;
+  setIsDark(next);
+  localStorage.setItem("theme", next ? "dark" : "light");
+  document.documentElement.classList.toggle("dark", next);
+};
+```
+
+And add this `useEffect` in Navbar to apply on load:
+
+```tsx
+useEffect(() => {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark") {
+    setIsDark(true);
+    document.documentElement.classList.add("dark");
+  }
+}, []);
