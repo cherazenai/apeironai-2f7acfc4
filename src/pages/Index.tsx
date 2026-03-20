@@ -5,7 +5,6 @@ import Features from "@/components/landing/Features";
 import Demo from "@/components/landing/Demo";
 import HowItWorks from "@/components/landing/HowItWorks";
 import ResearchFields from "@/components/landing/ResearchFields";
-import ImpactStats from "@/components/landing/ImpactStats";
 import Architecture from "@/components/landing/Architecture";
 import Pricing from "@/components/landing/Pricing";
 import RealityLabCTA from "@/components/landing/RealityLabCTA";
@@ -42,8 +41,7 @@ const Index = () => (
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
     </Helmet>
     <Navbar />
-    <Hero />
-    <ImpactStats />
+    <Hero /> 
     <Features />
     <Demo />
     <HowItWorks />
