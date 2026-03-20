@@ -1,3 +1,4 @@
+
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
@@ -41,7 +42,7 @@ const Index = () => (
       <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
     </Helmet>
     <Navbar />
-    <Hero /> 
+    <Hero />
     <Features />
     <Demo />
     <HowItWorks />
