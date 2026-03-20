@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bot, Brain, BookOpen, Loader2, Send, User, Lightbulb, FileText } from "lucide-react";
@@ -5,20 +6,68 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+
+const SYSTEM_PROMPT = `You are ApeironAI — a Research Copilot designed to assist scientists and researchers.
+
+Your goal is NOT to give generic explanations, but to produce structured, insightful, and research-grade outputs.
+
+Always follow this format:
+
+1. Summary (concise, technical overview)
+
+2. Key Methods & Approaches
+- Focus only on the most relevant and impactful methods
+- Avoid generic explanations
+
+3. Novel Insight / Research Direction
+- Suggest a specific, non-obvious research direction
+- Combine ideas if possible
+
+4. Testable Hypothesis
+- Provide at least one clear, testable scientific hypothesis
+- Make it measurable if possible
+
+5. Confidence Score
+- Give a confidence score (0–1) based on current scientific understanding
+
+6. Novelty Assessment
+- Low / Medium / High + short explanation
+
+7. Suggested Next Experiments
+- Practical steps a researcher could take
+
+Rules:
+- Avoid generic textbook explanations
+- Be specific and technical
+- Think like an expert collaborator, not a chatbot`;
 
 type Message = { role: "user" | "assistant"; content: string };
 type Tab = "chat" | "hypothesis" | "paper";
 
 async function askGroq(messages: Message[], extraSystem = ""): Promise<string> {
-  const { data, error } = await supabase.functions.invoke("groq-chat", {
-    body: { messages, extraSystem },
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT + (extraSystem ? "\n\n" + extraSystem : "") },
+        ...messages,
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
+      top_p: 1,
+    }),
   });
-  if (error) throw new Error(error.message);
-  return data?.choices?.[0]?.message?.content || "No response received.";
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "No response received.";
 }
 
-// ── CHAT TAB ──────────────────────────────────────────────
 function ChatTab() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -104,7 +153,6 @@ function ChatTab() {
   );
 }
 
-// ── HYPOTHESIS TAB ────────────────────────────────────────
 function HypothesisTab() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState("");
@@ -162,7 +210,6 @@ function HypothesisTab() {
   );
 }
 
-// ── PAPER READER TAB ──────────────────────────────────────
 function PaperTab() {
   const [text, setText] = useState("");
   const [result, setResult] = useState("");
@@ -211,7 +258,6 @@ function PaperTab() {
   );
 }
 
-// ── MAIN COMPONENT ────────────────────────────────────────
 const ResearchCopilot = () => {
   const [tab, setTab] = useState<Tab>("chat");
 
